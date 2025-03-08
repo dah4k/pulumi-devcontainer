@@ -1,0 +1,59 @@
+# Copyright 2025 dah4k
+# SPDX-License-Identifier: EPL-2.0
+
+FROM opensuse/leap:15.6 AS runtime
+
+## Restore man-pages and other documentation
+RUN sed -i 's/^rpm.install.excludedocs.*/rpm.install.excludedocs = no/' /etc/zypp/zypp.conf
+
+RUN zypper --quiet --non-interactive refresh \
+ && zypper --quiet --non-interactive install --no-recommends \
+        curl \
+        dust \
+        fd \
+        git \
+        gpg2 \
+        gzip \
+        java-21-openjdk-devel \
+        java-21-openjdk-headless \
+        jq \
+        make \
+        man \
+        man-pages \
+        man-pages-posix \
+        maven \
+        ripgrep \
+        tar \
+        tokei \
+        unzip \
+        vim \
+        vim-data \
+ && zypper --quiet --non-interactive clean
+
+## Create pulumi user
+RUN groupadd --gid 1000 pulumi \
+ && useradd --create-home --home-dir /home/pulumi --uid 1000 --gid 1000 pulumi
+
+USER pulumi
+
+WORKDIR /home/pulumi/Downloads
+
+## Install precompiled AWS CLI
+## https://github.com/aws/aws-cli/
+COPY files/awscli.pub .
+RUN curl -o awscliv2.zip     "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+ && curl -o awscliv2.zip.sig "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip.sig" \
+ && gpg --import awscli.pub \
+ && gpg --verify awscliv2.zip.sig \
+ && unzip awscliv2.zip \
+ && ./aws/install --install-dir /home/pulumi/.aws-cli --bin-dir /home/pulumi/bin \
+ && rm -rf /home/pulumi/Downloads/aws*
+
+ENV PATH="/home/pulumi/bin:${PATH}"
+
+WORKDIR /home/pulumi
+
+## Install precompiled Pulumi
+## https://github.com/pulumi/pulumi/
+RUN curl -fsSL https://get.pulumi.com | sh
+
