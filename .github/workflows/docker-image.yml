@@ -1,3 +1,6 @@
+# Copyright 2025 dah4k
+# SPDX-License-Identifier: EPL-2.0
+---
 name: Build and Publish Docker Image
 
 on:
@@ -27,8 +30,19 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Get current date
+      id: get-current-date
+      run: echo "CURRENT_DATE=$(date +'%Y%m%d')" >> $GITHUB_ENV
+
+    - name: Get repo owner
+      id: get-repo-owner
+      run: echo "REPO_OWNER=$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
     - name: Build and Publish the Docker image
+      env:
+        TAG_TODAY:  ghcr.io/${{ env.REPO_OWNER }}/pulumi-devcontainer:${{ env.CURRENT_DATE }}
+        TAG_LATEST: ghcr.io/${{ env.REPO_OWNER }}/pulumi-devcontainer:latest
       run: |
-        docker build . --file Dockerfile.pulumi-devcontainer --tag ghcr.io/dah4k/pulumi-devcontainer:latest --tag ghcr.io/dah4k/pulumi-devcontainer:$(date +%Y%m%d)
-        docker push ghcr.io/dah4k/pulumi-devcontainer:$(date +%Y%m%d)
-        docker push ghcr.io/dah4k/pulumi-devcontainer:latest
+        docker build . --file docker/Dockerfile.pulumi-devcontainer --tag $TAG_TODAY --tag $TAG_LATEST
+        docker push $TAG_TODAY
+        docker push $TAG_LATEST
