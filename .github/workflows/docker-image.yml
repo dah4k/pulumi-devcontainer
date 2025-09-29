@@ -40,9 +40,7 @@ jobs:
 
     - name: Build and Publish the Docker image
       env:
-        TAG_TODAY:  ghcr.io/${{ env.REPO_OWNER }}/pulumi-devcontainer:${{ env.CURRENT_DATE }}
-        TAG_LATEST: ghcr.io/${{ env.REPO_OWNER }}/pulumi-devcontainer:latest
+        TAG_NAME:  ghcr.io/${{ env.REPO_OWNER }}/pulumi-devcontainer:${{ env.CURRENT_DATE }}
       run: |
-        docker build . --file docker/Dockerfile.pulumi-devcontainer --tag $TAG_TODAY --tag $TAG_LATEST
-        docker push $TAG_TODAY
-        docker push $TAG_LATEST
+        docker build . --file docker/Dockerfile.pulumi-devcontainer --tag $TAG_NAME
+        docker push $TAG_NAME
